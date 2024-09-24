@@ -10,8 +10,10 @@ main_path="${main_dir%/}"
 echo "======================================================================="
 echo "project directory name:"
 echo "======================================================================="
+
 read name
 virenv=${name}_env
+
 echo "======================================================================="
 echo "Directory and project Folder: $main_path/$name "
 echo "======================================================================="
@@ -23,9 +25,9 @@ echo "======================================================================="
 echo "python version:"
 echo "======================================================================="
 read ver
-
+###################################################################################
 #project folder creation:
-
+###################################################################################
 if [ -d "$main_path/$name" ]; then
     echo "Folder already exists working on next step."
 else
@@ -39,8 +41,9 @@ sudo chown -R $USER:$USER $main_path/$name
 sudo chmod -R 775 $main_path/$name
 project_dir=$main_path/$name
 
+###################################################################################
 # VENV folder check:
-
+###################################################################################
 if [ -d "$main_path/VENV" ]; then
     echo "Folder already exists don't worry"
 else
@@ -52,15 +55,18 @@ fi
 sudo chown -R $USER:$USER $main_path/VENV
 sudo chmod -R 775 $main_path/VENV
 
+###################################################################################
 #env creation:
+###################################################################################
 
+sudo apt-get install python"$ver"-dev python"$ver"-venv
 
 if [ -d "$main_path/VENV/$virenv" ]; then
     echo "Folder already exists."
 else
     # Create the folder
     cd $main_path/VENV
-    virtualenv -p python"$ver" "$virenv"
+    python"$ver" -m venv "$virenv"
     if source $main_path/VENV/$virenv/bin/activate; then
         echo "Env created"
     else
@@ -73,7 +79,9 @@ fi
 
 venv_path=$main_path/VENV/$virenv
 
+##################################################################################
 #general service folder creation:
+##################################################################################
 
 if [ -d "$main_path/services" ]; then
     echo "Folder already exists don't worry"
@@ -86,7 +94,9 @@ fi
 sudo chown -R $USER:$USER $main_path/services
 sudo chmod -R 775 $main_path/services
 
+#################################################################################
 #Gunicorn file creation:
+#################################################################################
 
 socket_file=$project_dir/gunicorn.sock
 touch $main_path/services/gunicorn_$name.service
@@ -109,8 +119,12 @@ EOL
 
 sudo cp $main_path/services/gunicorn_$name.service /etc/systemd/system/
 sudo chmod 775 /etc/systemd/system/gunicorn_$name.service
-# nginx sites-available
 
+################################################################################
+#install nginx and configure nginx sites-available
+################################################################################
+
+sudo apt install nginx
 echo "enter server name:"
 read server
 echo "enter port number for nginx:"
@@ -137,7 +151,9 @@ EOL
 sudo cp $main_path/services/${name}_nginx /etc/nginx/sites-available/
 sudo ln -s /etc/nginx/sites-available/${name}_nginx /etc/nginx/sites-enabled/
 
+#############################################################################
 # celery conf:
+#############################################################################
 
 if [ -d "$main_path/celery_service/conf" ]; then
     echo "Folder already exists."
@@ -214,3 +230,4 @@ WantedBy=multi-user.target" >> $main_path/services/celery_$name.service
 #copy in systemd:
 sudo cp $main_path/services/celery_$name.service /etc/systemd/system/
 sudo chmod 775 /etc/systemd/system/celery_$name.service
+
